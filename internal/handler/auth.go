@@ -25,20 +25,20 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = service.RegisterUser(user)
-if err != nil {
-	err = service.RegisterUser(user)
-
 	if err != nil {
-	http.Error(w, err.Error(), http.StatusBadRequest)
-	return
-}
+		err = service.RegisterUser(user)
 
-w.WriteHeader(http.StatusCreated)
-w.Write([]byte("User registered successfully"))
-	return
-}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-w.Write([]byte("User registered"))
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("User registered successfully"))
+		return
+	}
+
+	w.Write([]byte("User registered"))
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {

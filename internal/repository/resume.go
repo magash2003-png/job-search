@@ -13,12 +13,14 @@ func CreateResume(r models.Resume) error {
 		context.Background(),
 
 		`INSERT INTO resumes
-		(title, description, skills, user_id)
-		VALUES ($1, $2, $3, $4)`,
+		(full_name, experience, skills, education, expected_salary, user_id)
+		VALUES ($1, $2, $3, $4, $5, $6)`,
 
-		r.Title,
-		r.Description,
+		r.FullName,
+		r.Experience,
 		r.Skills,
+		r.Education,
+		r.ExpectedSalary,
 		r.UserID,
 	)
 
@@ -34,7 +36,7 @@ func GetResumes() ([]models.Resume, error) {
 	rows, err := database.DB.Query(
 		context.Background(),
 
-		`SELECT id, title, description, skills, user_id
+		`SELECT id, user_id, full_name, experience, skills, education, expected_salary
 		FROM resumes`,
 	)
 
@@ -52,10 +54,12 @@ func GetResumes() ([]models.Resume, error) {
 
 		err := rows.Scan(
 			&resume.ID,
-			&resume.Title,
-			&resume.Description,
-			&resume.Skills,
 			&resume.UserID,
+			&resume.FullName,
+			&resume.Experience,
+			&resume.Skills,
+			&resume.Education,
+			&resume.ExpectedSalary,
 		)
 
 		if err != nil {
