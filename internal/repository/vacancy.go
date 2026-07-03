@@ -34,7 +34,9 @@ func GetVacancies() ([]models.Vacancy, error) {
 
 	rows, err := database.DB.Query(
 		context.Background(),
-		`SELECT id, title, description, city, salary, employer_id`,
+
+		`SELECT id, title, description, city, salary, employer_id
+		FROM vacancies`,
 	)
 
 	if err != nil {
@@ -67,15 +69,18 @@ func GetVacancies() ([]models.Vacancy, error) {
 
 	return vacancies, nil
 }
+
 func GetVacancyByID(id int) (models.Vacancy, error) {
 
 	var vacancy models.Vacancy
 
 	err := database.DB.QueryRow(
 		context.Background(),
+
 		`SELECT id, title, description, city, salary, employer_id
 		FROM vacancies
 		WHERE id = $1`,
+
 		id,
 	).Scan(
 		&vacancy.ID,
