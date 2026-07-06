@@ -26,11 +26,11 @@ func GetFavorites() ([]models.Favorite, error) {
 
 }
 
-func DeleteFavorite(id int) error {
+func DeleteFavorite(id int, userID int) error {
 
 	if id <= 0 {
 		return errors.New("invalid favorite id")
 	}
 
-	return repository.DeleteFavorite(id)
+	return repository.DeleteFavorite(id, userID)
 }

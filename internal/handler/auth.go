@@ -16,29 +16,29 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
+	var request dto.RegisterRequest
 
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
+	user := models.User{
+		Username: request.Username,
+		Email:    request.Email,
+		Password: request.Password,
+		Role:     request.Role,
+	}
+
 	err = service.RegisterUser(user)
 	if err != nil {
-		err = service.RegisterUser(user)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("User registered successfully"))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Write([]byte("User registered"))
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("User registered successfully"))
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {

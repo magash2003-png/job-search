@@ -3,10 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"job-search/internal/middleware"
 	"job-search/internal/models"
 	"job-search/internal/service"
-	"strconv"
 )
 
 func CreateVacancy(w http.ResponseWriter, r *http.Request) {
@@ -18,6 +19,25 @@ func CreateVacancy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	role, ok := r.Context().Value(middleware.RoleKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if role != "admin" && role != "employer" {
+		http.Error(w, "Only admin and employer can create vacancies", http.StatusForbidden)
+		return
+	}
+
+	vacancy.EmployerID = userID
 
 	err = service.CreateVacancy(vacancy)
 	if err != nil {

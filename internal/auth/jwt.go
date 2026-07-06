@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var SecretKey = []byte("job-search-secret")
+var SecretKey []byte
 
 func GenerateToken(userID int, role string) (string, error) {
 

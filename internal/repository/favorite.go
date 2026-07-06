@@ -59,15 +59,22 @@ func GetFavorites() ([]models.Favorite, error) {
 	return favorites, nil
 }
 
-func DeleteFavorite(id int) error {
+func DeleteFavorite(id int, userID int) error {
 
 	_, err := database.DB.Exec(
 		context.Background(),
 
 		`DELETE FROM favorites
-		WHERE id = $1`,
+		WHERE id = $1
+		AND user_id = $2`,
+
 		id,
+		userID,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

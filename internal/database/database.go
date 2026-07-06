@@ -7,6 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
+
+	"job-search/internal/auth"
 )
 
 var DB *pgx.Conn
@@ -17,6 +19,8 @@ func Connect() error {
 	if err != nil {
 		return err
 	}
+
+	auth.SecretKey = []byte(os.Getenv("JWT_SECRET"))
 
 	connectionString := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s",

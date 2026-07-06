@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"job-search/internal/database"
 	"job-search/internal/models"
@@ -53,4 +54,28 @@ func FindUserByEmail(email string) (models.User, error) {
 	}
 
 	return user, nil
+}
+
+func ChangeUserRole(userID int, role string) error {
+
+	tag, err := database.DB.Exec(
+		context.Background(),
+
+		`UPDATE users
+		SET role = $1
+		WHERE id = $2`,
+
+		role,
+		userID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if tag.RowsAffected() == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
 }

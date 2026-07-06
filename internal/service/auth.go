@@ -24,8 +24,12 @@ func RegisterUser(user models.User) error {
 		return errors.New("password is required")
 	}
 
+	if user.Role == "admin" {
+		return errors.New("admin role cannot be assigned during registration")
+	}
+
 	if user.Role != "applicant" && user.Role != "employer" {
-		return errors.New("invalid role")
+		return errors.New("role must be applicant or employer")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword(
@@ -64,4 +68,15 @@ func LoginUser(email string, password string) (string, error) {
 	}
 
 	return token, nil
+}
+
+func ChangeUserRole(userID int, role string) error {
+
+	if role != "admin" &&
+		role != "employer" &&
+		role != "applicant" {
+		return errors.New("invalid role")
+	}
+
+	return repository.ChangeUserRole(userID, role)
 }

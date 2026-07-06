@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"job-search/internal/middleware"
 	"job-search/internal/models"
 	"job-search/internal/service"
 )
@@ -19,12 +20,32 @@ func CreateFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	role, ok := r.Context().Value(middleware.RoleKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if role != "applicant" {
+		http.Error(w, "Only applicants can add favorites", http.StatusForbidden)
+		return
+	}
+
+	favorite.UserID = userID
+
 	err = service.CreateFavorite(favorite)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Favorite added"))
 }
 
@@ -35,6 +56,8 @@ func GetFavorites(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(favorites)
 }
@@ -49,7 +72,13 @@ func DeleteFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = service.DeleteFavorite(id)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err = service.DeleteFavorite(id, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

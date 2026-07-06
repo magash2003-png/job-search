@@ -3,12 +3,14 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"job-search/internal/database"
 	"job-search/internal/routes"
 )
 
 func main() {
+
 	err := database.Connect()
 	if err != nil {
 		log.Fatal(err)
@@ -16,7 +18,12 @@ func main() {
 
 	routes.SetupRoutes()
 
-	log.Println("Server started on :8080")
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Server started on :" + port)
+
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
