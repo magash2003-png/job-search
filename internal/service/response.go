@@ -17,11 +17,41 @@ func CreateResponse(r models.Response) error {
 		return errors.New("vacancy_id is required")
 	}
 
+	exists, err := repository.VacancyExists(r.VacancyID)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return errors.New("vacancy not found")
+	}
+
+	exists, err = repository.ResponseExists(r.UserID, r.VacancyID)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return errors.New("you have already responded to this vacancy")
+	}
+
 	return repository.CreateResponse(r)
 }
 
 func GetResponses() ([]models.Response, error) {
 
 	return repository.GetResponses()
+
+}
+
+func GetResponsesByUser(userID int) ([]models.Response, error) {
+
+	return repository.GetResponsesByUser(userID)
+
+}
+
+func GetResponsesByEmployer(employerID int) ([]models.Response, error) {
+
+	return repository.GetResponsesByEmployer(employerID)
 
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"job-search/internal/database"
 	"job-search/internal/models"
@@ -23,11 +24,7 @@ func CreateVacancy(v models.Vacancy) error {
 		v.EmployerID,
 	)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func GetVacancies() ([]models.Vacancy, error) {
@@ -96,4 +93,116 @@ func GetVacancyByID(id int) (models.Vacancy, error) {
 	}
 
 	return vacancy, nil
+}
+
+// Employer может изменить только свою вакансию.
+func UpdateVacancy(v models.Vacancy) error {
+
+	result, err := database.DB.Exec(
+		context.Background(),
+
+		`UPDATE vacancies
+		SET title = $1,
+		    description = $2,
+		    city = $3,
+		    salary = $4
+		WHERE id = $5
+		AND employer_id = $6`,
+
+		v.Title,
+		v.Description,
+		v.City,
+		v.Salary,
+		v.ID,
+		v.EmployerID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("vacancy not found or access denied")
+	}
+
+	return nil
+}
+
+// Admin может изменить любую вакансию.
+func UpdateVacancyByAdmin(v models.Vacancy) error {
+
+	result, err := database.DB.Exec(
+		context.Background(),
+
+		`UPDATE vacancies
+		SET title = $1,
+		    description = $2,
+		    city = $3,
+		    salary = $4
+		WHERE id = $5`,
+
+		v.Title,
+		v.Description,
+		v.City,
+		v.Salary,
+		v.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("vacancy not found")
+	}
+
+	return nil
+}
+
+// Employer может удалить только свою вакансию.
+func DeleteVacancy(id int, employerID int) error {
+
+	result, err := database.DB.Exec(
+		context.Background(),
+
+		`DELETE FROM vacancies
+		WHERE id = $1
+		AND employer_id = $2`,
+
+		id,
+		employerID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("vacancy not found or access denied")
+	}
+
+	return nil
+}
+
+// Admin может удалить любую вакансию.
+func DeleteVacancyByAdmin(id int) error {
+
+	result, err := database.DB.Exec(
+		context.Background(),
+
+		`DELETE FROM vacancies
+		WHERE id = $1`,
+
+		id,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("vacancy not found")
+	}
+
+	return nil
 }

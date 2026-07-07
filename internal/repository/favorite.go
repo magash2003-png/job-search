@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"job-search/internal/database"
 	"job-search/internal/models"
@@ -22,13 +23,16 @@ func CreateFavorite(f models.Favorite) error {
 	return err
 }
 
-func GetFavorites() ([]models.Favorite, error) {
+func GetFavorites(userID int) ([]models.Favorite, error) {
 
 	rows, err := database.DB.Query(
 		context.Background(),
 
 		`SELECT id, user_id, vacancy_id
-		FROM favorites`,
+		FROM favorites
+		WHERE user_id = $1`,
+
+		userID,
 	)
 
 	if err != nil {
@@ -61,7 +65,7 @@ func GetFavorites() ([]models.Favorite, error) {
 
 func DeleteFavorite(id int, userID int) error {
 
-	_, err := database.DB.Exec(
+	result, err := database.DB.Exec(
 		context.Background(),
 
 		`DELETE FROM favorites
@@ -76,5 +80,33 @@ func DeleteFavorite(id int, userID int) error {
 		return err
 	}
 
+	if result.RowsAffected() == 0 {
+		return errors.New("favorite not found")
+	}
+
 	return nil
+}
+
+
+func FavoriteExists(userID int, vacancyID int) (bool, error) {
+
+	var count int
+
+	err := database.DB.QueryRow(
+		context.Background(),
+
+		`SELECT COUNT(*)
+		FROM favorites
+		WHERE user_id = $1
+		AND vacancy_id = $2`,
+
+		userID,
+		vacancyID,
+	).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

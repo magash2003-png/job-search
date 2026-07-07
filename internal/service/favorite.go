@@ -17,12 +17,30 @@ func CreateFavorite(f models.Favorite) error {
 		return errors.New("vacancy_id is required")
 	}
 
+	exists, err := repository.VacancyExists(f.VacancyID)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return errors.New("vacancy not found")
+	}
+
+	exists, err = repository.FavoriteExists(f.UserID, f.VacancyID)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return errors.New("vacancy already in favorites")
+	}
+
 	return repository.CreateFavorite(f)
 }
 
-func GetFavorites() ([]models.Favorite, error) {
+func GetFavorites(userID int) ([]models.Favorite, error) {
 
-	return repository.GetFavorites()
+	return repository.GetFavorites(userID)
 
 }
 

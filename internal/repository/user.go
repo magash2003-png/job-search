@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"job-search/internal/database"
 	"job-search/internal/models"
 )
@@ -23,6 +24,13 @@ func CreateUser(user models.User) error {
 	)
 
 	if err != nil {
+
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			if pgErr.Code == "23505" {
+				return errors.New("email already exists")
+			}
+		}
+
 		return err
 	}
 

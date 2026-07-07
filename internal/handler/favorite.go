@@ -16,24 +16,40 @@ func CreateFavorite(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&favorite)
 	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid JSON",
+		})
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Unauthorized",
+		})
 		return
 	}
 
 	role, ok := r.Context().Value(middleware.RoleKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Unauthorized",
+		})
 		return
 	}
 
 	if role != "applicant" {
-		http.Error(w, "Only applicants can add favorites", http.StatusForbidden)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Only applicants can add favorites",
+		})
 		return
 	}
 
@@ -41,25 +57,57 @@ func CreateFavorite(w http.ResponseWriter, r *http.Request) {
 
 	err = service.CreateFavorite(favorite)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Favorite added"))
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Favorite added successfully",
+	})
 }
 
 func GetFavorites(w http.ResponseWriter, r *http.Request) {
 
-	favorites, err := service.GetFavorites()
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	favorites, err := service.GetFavorites(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(favorites)
+	if len(favorites) == 0 {
+		json.NewEncoder(w).Encode(map[string]any{
+			"message": "No favorites found",
+			"data":    []models.Favorite{},
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"message": "Favorites retrieved successfully",
+		"data":    favorites,
+	})
 }
 
 func DeleteFavorite(w http.ResponseWriter, r *http.Request) {
@@ -68,23 +116,38 @@ func DeleteFavorite(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		http.Error(w, "Invalid id", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid id",
+		})
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Unauthorized",
+		})
 		return
 	}
 
 	err = service.DeleteFavorite(id, userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	w.Write([]byte("Favorite deleted"))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Favorite deleted successfully",
+	})
 }
 
 func Favorites(w http.ResponseWriter, r *http.Request) {
@@ -101,6 +164,10 @@ func Favorites(w http.ResponseWriter, r *http.Request) {
 		DeleteFavorite(w, r)
 
 	default:
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Method not allowed",
+		})
 	}
 }

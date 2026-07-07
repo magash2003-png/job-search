@@ -32,11 +32,15 @@ func RegisterUser(user models.User) error {
 		return errors.New("role must be applicant or employer")
 	}
 
+	_, err := repository.FindUserByEmail(user.Email)
+	if err == nil {
+		return errors.New("email already exists")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(user.Password),
 		bcrypt.DefaultCost,
 	)
-
 	if err != nil {
 		return err
 	}
