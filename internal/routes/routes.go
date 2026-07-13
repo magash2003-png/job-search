@@ -8,7 +8,6 @@ import (
 )
 
 func SetupRoutes() {
-
 	http.HandleFunc("/", handler.Home)
 	http.HandleFunc("/register", handler.Register)
 	http.HandleFunc("/login", handler.Login)
